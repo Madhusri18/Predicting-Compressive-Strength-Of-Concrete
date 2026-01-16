@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Concrete Strength Result</title>
+
+<style>
+  body {
+    margin: 0;
+    height: 100vh;
+    font-family: "Segoe UI", Arial, sans-serif;
+    background: url("{{ url_for('static', filename='concrete_bg.jpg') }}") no-repeat center center fixed;
+    background-size: cover;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #ffffff;
+  }
+
+  body::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+  }
+
+  .content {
+    position: relative;
+    text-align: center;
+    animation: fadeUp 0.7s ease;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  h1 {
+    font-size: 46px;   /* ⬆ Increased */
+    margin-bottom: 30px;
+    color:  #becbc5 ;
+    letter-spacing: 1.5px;
+  }
+
+  .value {
+    font-size: 72px;   /* ⬆ Big highlight */
+    font-weight: 800;
+    color: #ff5252;
+  }
+
+  .unit {
+    font-size: 30px;   /* ⬆ */
+    margin-left: 10px;
+    color: #ff8a80;
+  }
+
+  .category {
+    margin-top: 18px;
+    font-size: 26px;   /* ⬆ */
+    color: #f1f1f1;
+  }
+
+  .btn {
+    display: inline-block;
+    margin-top: 45px;
+    padding: 18px 50px;
+    background: #00796b;
+    color: white;
+    text-decoration: none;
+    border-radius: 35px;
+    font-size: 22px;   /* ⬆ */
+    transition: all 0.3s ease;
+  }
+
+  .btn:hover {
+    background: #004d40;
+    transform: scale(1.1);
+  }
+
+  @media (max-width: 600px) {
+    h1 { font-size: 32px; }
+    .value { font-size: 52px; }
+    .category { font-size: 20px; }
+    .btn { font-size: 18px; padding: 14px 36px; }
+  }
+</style>
+</head>
+
+<body>
+
+<div class="content">
+  <h1>Predicted Concrete Strength</h1>
+
+  <div class="value">
+    {{ prediction_value|round(2) }}
+    <span class="unit">MPa</span>
+  </div>
+
+  <div class="category">
+    {% if prediction_value < 25 %}
+      Normal Strength Concrete
+    {% elif prediction_value < 40 %}
+      Structural Grade Concrete
+    {% else %}
+      High Strength Concrete
+    {% endif %}
+  </div>
+
+  <a href="/Prediction" class="btn">← Predict Again</a>
+</div>
+
+</body>
+</html>

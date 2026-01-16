@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Concrete Strength Prediction</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: url("{{ url_for('static', filename='concrete_bg.jpg') }}") no-repeat center center fixed;
+  background-size: cover;
+  min-height: 100vh;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: -1;
+}
+
+.container {
+  display: flex;
+  gap: 25px;
+  padding: 30px;
+  max-width: 1400px;
+  margin: auto;
+}
+
+.left, .right {
+  backdrop-filter: blur(14px);
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 18px;
+  padding: 25px;
+  border: 1px solid rgba(255,255,255,0.25);
+  color: #fff;
+}
+
+.left { width: 35%; }
+.right { width: 65%; }
+
+h2 {
+  margin-top: 0;
+  color: #fff;
+}
+
+.param {
+  margin-bottom: 18px;
+}
+
+label {
+  font-weight: 600;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+input[type=range] {
+  flex: 1;
+  accent-color: #00bfa5;
+}
+
+input[type=number] {
+  width: 90px;
+  padding: 6px;
+  border-radius: 6px;
+  border: none;
+}
+
+.btn {
+  width: 100%;
+  padding: 15px;
+  margin-top: 25px;
+  background: #e53935;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.reset-btn {
+  width: 100%;
+  padding: 13px;
+  margin-top: 12px;
+  background: #555;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+th, td {
+  border: 1px solid rgba(255,255,255,0.3);
+  padding: 10px;
+  text-align: center;
+}
+
+th {
+  background: rgba(0,0,0,0.3);
+}
+
+.insight {
+  margin-top: 20px;
+  padding: 18px;
+  border-radius: 12px;
+  background: rgba(0,0,0,0.35);
+}
+
+@media (max-width: 1000px) {
+  .container { flex-direction: column; }
+  .left, .right { width: 100%; }
+}
+</style>
+</head>
+
+<body>
+<div class="overlay"></div>
+
+<form action="/predict" method="post">
+<div class="container">
+
+<!-- LEFT PANEL -->
+<div class="left">
+<h2>Define Concrete Parameters</h2>
+
+{% for p in [
+('cement',0,600,0),
+('blast_furnace_slag',0,300,0),
+('fly_ash',0,300,0),
+('water',0,250,0),
+('superplasticizer',0,30,0),
+('coarse_aggregate',0,1200,0),
+('fine_aggregate',0,900,0),
+('age',0,365,0)
+] %}
+
+
+<div class="param">
+<label>{{ p[0].replace('_',' ').title() }}</label>
+<div class="controls">
+<input type="range" id="r_{{p[0]}}" min="{{p[1]}}" max="{{p[2]}}" step="0.1"
+       value="{{p[3]}}" oninput="sync('{{p[0]}}', this.value)">
+<input type="number" id="{{p[0]}}" name="{{p[0]}}" step="0.1"
+       value="{{p[3]}}" oninput="sync('{{p[0]}}', this.value)">
+</div>
+</div>
+
+{% endfor %}
+
+<button class="btn">Predict Strength</button>
+<button type="button" class="reset-btn" onclick="resetAll()">Reset All</button>
+</div>
+
+<!-- RIGHT PANEL -->
+<div class="right">
+<h2>User Defined Parameters</h2>
+
+<table>
+<tr><th>Cement</th><th>Slag</th><th>Fly Ash</th><th>Water</th></tr>
+<tr><td id="t_cement">–</td><td id="t_slag">–</td><td id="t_fly">–</td><td id="t_water">–</td></tr>
+<tr><th>Superplasticizer</th><th>Coarse Aggregate</th><th>Fine Aggregate</th><th>Age</th></tr>
+<tr><td id="t_super">–</td><td id="t_coarse">–</td><td id="t_fine">–</td><td id="t_age">–</td></tr>
+</table>
+
+<h2 style="margin-top:25px;">Concrete Mix Insights</h2>
+<div class="insight">
+<p><b>Water–Cement Ratio:</b> <span id="wc_ratio">–</span></p>
+<p><b>Concrete Age Category:</b> <span id="age_type">–</span></p>
+<p><b>Workability Indicator:</b> <span id="workability">–</span></p>
+</div>
+<h2 style="margin-top:25px;">Prediction Notes</h2>
+
+<div class="insight">
+  <p>• Adjust the concrete mix parameters using sliders or manual input.</p>
+  <p>• All material quantities are calculated per cubic meter of concrete.</p>
+  <p>• The system analyzes the mix design to estimate concrete strength.</p>
+  <p>• Results indicate the predicted strength after standard curing duration.</p>
+</div>
+
+
+</div>
+</div>
+</form>
+
+<script>
+function sync(name, value) {
+  document.getElementById(name).value = value;
+  document.getElementById("r_" + name).value = value;
+
+  const map = {
+    cement:"t_cement", blast_furnace_slag:"t_slag", fly_ash:"t_fly",
+    water:"t_water", superplasticizer:"t_super",
+    coarse_aggregate:"t_coarse", fine_aggregate:"t_fine", age:"t_age"
+  };
+  if(map[name]) document.getElementById(map[name]).innerText = value;
+
+  const cement = +document.getElementById("cement").value || 0;
+  const water = +document.getElementById("water").value || 0;
+  const age = +document.getElementById("age").value || 0;
+  const superp = +document.getElementById("superplasticizer").value || 0;
+
+  document.getElementById("wc_ratio").innerText =
+    cement ? (water/cement).toFixed(2) : "–";
+
+  document.getElementById("age_type").innerText =
+    age < 7 ? "Early Age" : age < 28 ? "Developing" : age ? "Mature" : "–";
+
+  document.getElementById("workability").innerText =
+    superp > 5 ? "High" : water > 180 ? "Medium" : "Low";
+}
+
+function resetAll() {
+  const defaults = {
+    cement:540, blast_furnace_slag:0, fly_ash:0, water:162,
+    superplasticizer:2.5, coarse_aggregate:1040, fine_aggregate:676, age:28
+  };
+
+  for (let k in defaults) sync(k, defaults[k]);
+
+  ["wc_ratio","age_type","workability"].forEach(id =>
+    document.getElementById(id).innerText = "–"
+  );
+}
+</script>
+
+</body>
+</html>
