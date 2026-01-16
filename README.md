@@ -70,5 +70,4 @@ The model predicts concrete strength using the following features (per cubic met
 
 ---
 
-## 📁 Project Structure
 
