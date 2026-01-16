@@ -13,7 +13,6 @@ with open("cement.pkl", "rb") as f:
 with open("feature_names.pkl", "rb") as f:
     FEATURE_NAMES = [col.strip() for col in pickle.load(f)]
 
-
 # Home page
 @app.route("/")
 def home():
@@ -25,7 +24,6 @@ def prediction():
     return render_template("prj2.html")
 
 # Handle prediction
-@app.route("/predict", methods=["POST"])
 @app.route("/predict", methods=["POST"])
 def predict():
     try:
@@ -52,17 +50,15 @@ def predict():
         result = model.predict(x)[0]
 
         return render_template(
-    "prj3.html",
-    prediction_value=result
-)
-
-
+            "prj3.html",
+            prediction_value=round(float(result), 2)
+        )
 
     except Exception as e:
         return render_template(
             "prj3.html",
-            prediction_text=f"Error: {str(e)}"
+            prediction_value=f"Error: {str(e)}"
         )
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
